@@ -1,4 +1,6 @@
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.util.Scanner;
 
 public class Polynomial{
@@ -31,18 +33,21 @@ public class Polynomial{
             coefficients = new double[terms.length];
             exponents = new int[terms.length];
 
-            int i = 0;
-            if(!terms[0].contains("x")) {
-                coefficients[0] = Double.parseDouble(terms[0]);
-                exponents[0] = 0;
-                i++;
-            }
+            for(int i = 0; i < terms.length; i++) {
+                if(!terms[i].contains("x")) {
+                    coefficients[i] = Double.parseDouble(terms[i]);
+                    exponents[i] = 0;
+                } else {
+                    String[] coeffAndExpStr = terms[i].split("x");
+                    if(coeffAndExpStr[0] == "") coefficients[i] = 1;
+                    else if(coeffAndExpStr[0].equals("-")) coefficients[i] = -1;
+                    else coefficients[i] = Double.parseDouble(coeffAndExpStr[0]);
+                    
+                    if(coeffAndExpStr.length == 1) exponents[i] = 1;
+                    else exponents[i] = Integer.parseInt(coeffAndExpStr[1]);
 
+                }
 
-            for(; i < terms.length; i++) {
-                String[] coeffAndExpStr = terms[i].split("x");
-                coefficients[i] = Double.parseDouble(coeffAndExpStr[0]);
-                exponents[i] = Integer.parseInt(coeffAndExpStr[1]);
             }
         } catch (Exception e) {
             System.out.println("Unable to read provided file " + file.getPath() + "\nUsing default value f(x)=0.");
@@ -53,13 +58,16 @@ public class Polynomial{
 
     @Override
     public String toString() {
-        // If we have a constant function:
-        if(this.coefficients.length == 1)
-            return this.coefficients[0] + "";
-
-        String out = this.coefficients[0] + "";
-        for(int i = 1; i < this.coefficients.length; i++)
-            out = out + this.coefficients[i] + "x" + this.exponents[i];
+        String out = "";
+        for(int i = 0; i < this.coefficients.length; i++) {
+            if(i == 0) {
+                out += this.coefficients[i];
+                if(this.exponents[i] != 0) out += "x" + this.exponents[i];
+            } else {
+                if(this.coefficients[i] > 0) out += "+";
+                out += this.coefficients[i] + "x" + this.exponents[i];
+            }
+        }
         return out;
     }
 
@@ -118,22 +126,40 @@ public class Polynomial{
         double[] outC = new double[k];
         int[] outE = new int[k];
         for(int m = 0; m < k; m++) {
-            outC[m] = tempCoeffs[k];
-            outE[m] = tempExps[k];
+            outC[m] = tempCoeffs[m];
+            outE[m] = tempExps[m];
         }
         return new Polynomial(outC, outE);
 	}
+    public Polynomial multiply(Polynomial p) {
+
+
+
+
+        // TODO: remove placeholder return:
+        return new Polynomial();
+    }
 
     public double evaluate(double x) {
-        int len = this.coefficients.length;
+        int len = coefficients.length;
         double out = 0;
         for(int i = 0; i < len; i++) {
-            out += this.coefficients[i]*Math.pow(x, i);
+            double term = coefficients[i] * Math.pow(x, exponents[i]);
+            out += term;
         }
         return out;
     }
 
     public boolean hasRoot(double x) {
         return evaluate(x) == 0;
+    }
+
+    public void saveToFile(String path) {
+        try (BufferedWriter w = new BufferedWriter(new FileWriter(path))) {
+            w.write(this.toString());
+        } catch (Exception e) {
+            System.out.println("could not write polynomial to file");
+            e.printStackTrace();
+        }
     }
 }
