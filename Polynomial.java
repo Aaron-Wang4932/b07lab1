@@ -1,6 +1,7 @@
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.util.Arrays;
 import java.util.Scanner;
 
 public class Polynomial{
@@ -71,6 +72,16 @@ public class Polynomial{
         return out;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj) return true;
+
+        if(obj == null || !(obj instanceof Polynomial)) return false;
+
+        Polynomial comp = (Polynomial) obj;
+        return Arrays.equals(this.coefficients, comp.coefficients) && Arrays.equals(this.exponents, comp.exponents);
+    }
+
 	public Polynomial add(Polynomial p) {
         double[] pCoeffs = p.coefficients;
         int[] pExps = p.exponents;
@@ -132,12 +143,31 @@ public class Polynomial{
         return new Polynomial(outC, outE);
 	}
     public Polynomial multiply(Polynomial p) {
+        // Take (this) = a1 + a2 + ... + an, (p) = b1 + b2 + ... + bk ---> (this) and (p) will both be guaranteed to have ascending degree order
+        // Either from initial assumption or because add function guarantees the output to be in ascending order
+        // Then, (this)(p) = (a1b1 + a1b2 + ... + a1bk) + (a2b1 + a2b2 + ... + a2bk) + ... + (anb1 + anb2 + ... + anbk)
+        // Just add each monomial to an output Polynomial.
 
+        double[] pCoeffs = p.coefficients;
+        int[] pExps = p.exponents;
 
+        int n = this.coefficients.length, k = pCoeffs.length;
+        
+        Polynomial out = new Polynomial(new double[0], new int[0]); // want completely empty poly! not one that is the zero func.
 
+        for(int i = 0; i < n; i++) {
+            for(int j = 0; j < k; j++) {
+                double[] newCoeff = {this.coefficients[i] * pCoeffs[j]};
+                int[] newExp = {this.exponents[i] + pExps[j]};
 
-        // TODO: remove placeholder return:
-        return new Polynomial();
+                Polynomial kthTermInN = new Polynomial(newCoeff, newExp);
+                out = out.add(kthTermInN);
+            }
+        }
+
+        // hacky check to see if out is 0.
+        if(out.coefficients.length == 0 || out.exponents.length == 0) out = new Polynomial();
+        return out;
     }
 
     public double evaluate(double x) {
